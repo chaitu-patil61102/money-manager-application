@@ -1,0 +1,39 @@
+package com.main.repository;
+
+import com.main.entity.ExpenseEntity;
+import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+public interface ExpenseRepository extends JpaRepository<ExpenseEntity,Long> {
+    //additional query method can be defined here if needed
+    //select *from tbl_expenses where profile_id =?1 order by date desc
+    List<ExpenseEntity> findByProfileIdOrderByDateDesc(Long profileId);
+
+    //select *from tbl_expenses where profile_id =?1 order by date desc limit 5
+    List<ExpenseEntity> findTop5ByProfileIdOrderByDateDesc(Long profileId);
+
+    @Query("select sum(e.amount) from ExpenseEntity e where e.profile.id = :profileId")
+    BigDecimal finalTotalExpenseByProfileId(@Param("profileId") Long profileId);
+
+    //select *from tbl_expenses where profile_Id = ?1 and date between ? 2 and ?3 and name like %?4%
+    List<ExpenseEntity> findByProfileIdAndDateBetweenAndNameContainingIgnoreCase(
+            Long profileId,
+            LocalDate startDate,
+            LocalDate endDate,
+            String keyword,
+            Sort sort
+    );
+
+    //select *from tbl_expenses where profile_id=?1 and date between ?2 and ?3
+    List<ExpenseEntity> findByProfileIdAndDateBetween(Long profileId,LocalDate startDate,LocalDate endDate);
+
+    //select *from tbl_expenses where profile_id=?1 and data =?2
+    List<ExpenseEntity> findByProfileIdAndDate(Long profileId,LocalDate date);
+}
