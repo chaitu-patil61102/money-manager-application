@@ -26,6 +26,8 @@ public class CategoryEntity {
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Column(nullable = false)
     private String type;
     private String icon;
 

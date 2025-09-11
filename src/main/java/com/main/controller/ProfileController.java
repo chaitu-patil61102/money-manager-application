@@ -1,10 +1,10 @@
 package com.main.controller;
 
-import com.main.dto.AuthDTO;
+import com.main.dto.AuthDTO; 
 import com.main.dto.ProfileDTO;
 import com.main.service.ProfileService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,8 +51,14 @@ public class ProfileController {
         catch(Exception e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "message",e.getMessage()
-            ));
+            ));  
         }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<ProfileDTO> getPublicProfile(){
+        ProfileDTO profileDTO = profileService.getPublicProfile(null);
+        return ResponseEntity.ok(profileDTO);
     }
 
 }

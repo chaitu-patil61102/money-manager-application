@@ -44,4 +44,12 @@ public class CategoryController {
         CategoryDTO updatedCategory =  categoryService.updateCategory(categoryId,categoryDTO);
         return ResponseEntity.ok(updatedCategory);
     }
+
+    // delete category by id
+    @DeleteMapping("/{categoryId}")
+    public ResponseEntity<Void> deleteCategory(@PathVariable Long categoryId) {
+        categoryService.deleteCategory(categoryId);
+        return ResponseEntity.noContent().build(); // 204 No Content
+    }
+
 }

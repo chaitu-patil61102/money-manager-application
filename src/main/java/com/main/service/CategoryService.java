@@ -75,4 +75,16 @@ public class CategoryService {
                 .type(entity.getType())
                 .build();
     }
+
+    // delete category
+    public void deleteCategory(Long categoryId) {
+        ProfileEntity profile = profileService.getCurrentProfile();
+
+        // check ownership
+        CategoryEntity category = categoryRepository.findByIdAndProfileId(categoryId, profile.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found or not accessible"));
+
+        categoryRepository.delete(category);
+    }
+
 }

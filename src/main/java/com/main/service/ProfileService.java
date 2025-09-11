@@ -133,6 +133,7 @@ import com.main.dto.ProfileDTO;
 import com.main.entity.ProfileEntity;
 import com.main.repository.ProfileRepository;
 import com.main.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -164,11 +165,11 @@ public class ProfileService {
         newProfile.setActivationToken(UUID.randomUUID().toString());
         newProfile = profileRepository.save(newProfile);
 
-        String activationLink = "activationURL/api/v1.0/activate?token=" + newProfile.getActivationToken();
+        //send activation email
+        String activationLink = activationURL + "/api/v1.0/activate?token=" + newProfile.getActivationToken();
         String subject = "Activate your Money Manager Account";
         String body = "Click on the following link to activate your account : " + activationLink;
         emailService.sendEmail(newProfile.getEmail(), subject, body);
-
         return toDTO(newProfile);
     }
 

@@ -6,12 +6,20 @@ import com.main.entity.ExpenseEntity;
 import com.main.entity.ProfileEntity;
 import com.main.repository.CategoryRepository;
 import com.main.repository.ExpenseRepository;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +33,7 @@ public class ExpenseService {
     private final CategoryRepository categoryRepository;
     private final ExpenseRepository expenseRepository;
     private final ProfileService profileService;
+    private final EmailService emailService;
 
     //add new expense to the database
     public ExpenseDTO addExpense(ExpenseDTO dto){
@@ -37,7 +46,7 @@ public class ExpenseService {
     }
 
     //retrieves all expanses for the current month based on the start date and end date
-    public List<ExpenseDTO> getCurrentMonthExpensesForCurrentuser(){
+    public List<ExpenseDTO> getCurrentMonthExpensesForCurrentUser(){
         ProfileEntity profile=profileService.getCurrentProfile();
         LocalDate now=LocalDate.now();
         LocalDate startDate = now.withDayOfMonth(1);
@@ -108,6 +117,53 @@ public class ExpenseService {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
+    }
+
+    //newly added
+
+    public ByteArrayResource downloadExpensesAsExcel() throws IOException {
+        ProfileEntity profile = profileService.getCurrentProfile();
+        List<ExpenseEntity> expenses = expenseRepository.findByProfileId(profile.getId());
+
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            Sheet sheet = workbook.createSheet("Expenses");
+
+            // Header row
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"S.No", "Name", "Category", "Amount", "Date"};
+            for (int i = 0; i < headers.length; i++) {
+                headerRow.createCell(i).setCellValue(headers[i]);
+            }
+
+            // Data rows
+            int rowNum = 1;
+            int srNo = 1;
+            for (ExpenseEntity expense : expenses) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(srNo++);
+                row.createCell(1).setCellValue(expense.getName());
+                row.createCell(2).setCellValue(expense.getCategory() != null ? expense.getCategory().getName() : "N/A");
+                row.createCell(3).setCellValue(expense.getAmount().doubleValue());
+                row.createCell(4).setCellValue(expense.getDate().toString());
+            }
+
+            workbook.write(out);
+            return new ByteArrayResource(out.toByteArray());
+        }
+    }
+
+    public void emailExpenses(String to) throws IOException, MessagingException {
+        ByteArrayResource excel = downloadExpensesAsExcel();
+//        emailService.sendExcel(to, "expenses.xlsx", excel);
+        emailService.sendExcel(
+                to,                                      // ✅ Recipient email
+                "Your Expense Report",                   // ✅ Email subject
+                "Please find attached your expense report.", // ✅ Email body
+                "expenses.xlsx",                         // ✅ File name
+                excel                                    // ✅ Excel file
+        );
     }
 
 }
